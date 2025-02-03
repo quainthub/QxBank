@@ -102,7 +102,7 @@ public class UserController {
             description = "Http Status 201 Created"
     )
     @PostMapping("/transfer")
-    public BankResponse debitAccount(@RequestBody TransferRequest transferRequest){
+    public BankResponse transfer(@RequestBody TransferRequest transferRequest){
         return userService.transfer(transferRequest);
     }
 }
