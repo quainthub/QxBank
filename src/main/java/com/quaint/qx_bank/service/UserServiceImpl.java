@@ -1,9 +1,6 @@
 package com.quaint.qx_bank.service;
 
-import com.quaint.qx_bank.dto.AccountInfo;
-import com.quaint.qx_bank.dto.BankResponse;
-import com.quaint.qx_bank.dto.EmailDetails;
-import com.quaint.qx_bank.dto.UserRequest;
+import com.quaint.qx_bank.dto.*;
 import com.quaint.qx_bank.entity.User;
 import com.quaint.qx_bank.repository.UserRepository;
 import com.quaint.qx_bank.utils.AccountUtils;
@@ -41,6 +38,7 @@ public class UserServiceImpl implements UserService{
                 .gender(userRequest.getGender())
                 .address(userRequest.getAddress())
                 .stateOfOrigin(userRequest.getStateOfOrigin())
+                .accountName()
                 .accountNumber(AccountUtils.generateAccountNumber())
                 .accountBalance(BigDecimal.ZERO)
                 .email(userRequest.getEmail())
@@ -50,7 +48,7 @@ public class UserServiceImpl implements UserService{
                 .build();
         User savedUser = userRepository.save(newUser);
         AccountInfo savedUserAccountInfo = AccountInfo.builder()
-                .accountName(savedUser.getFirstName()+" "+savedUser.getLastName()+" "+savedUser.getOtherName())
+                .accountName(savedUser.getAccountName())
                 .accountNumber(savedUser.getAccountNumber())
                 .accountBalance(savedUser.getAccountBalance())
                 .build();
@@ -73,5 +71,39 @@ public class UserServiceImpl implements UserService{
                 .accountInfo(savedUserAccountInfo)
                 .build();
     }
+
+    @Override
+    public BankResponse balanceInquiry(InquiryRequest inquiryRequest) {
+        boolean isAccountExist = userRepository.existsByAccountNumber(inquiryRequest.getAccountNumber());
+        if (!isAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXISTS_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+        User foundUser = userRepository.findByAccountNumber(inquiryRequest.getAccountNumber());
+        AccountInfo foundUserAccountInfo = AccountInfo.builder()
+                .accountName(foundUser.getAccountName())
+                .accountNumber(foundUser.getAccountNumber())
+                .accountBalance(foundUser.getAccountBalance())
+                .build();
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_FOUND_CODE)
+                .responseMessage(AccountUtils.ACCOUNT_FOUND_MESSAGE)
+                .accountInfo(foundUserAccountInfo)
+                .build();
+    }
+
+    @Override
+    public String nameInquiry(InquiryRequest inquiryRequest) {
+        boolean isAccountExist = userRepository.existsByAccountNumber(inquiryRequest.getAccountNumber());
+        if (!isAccountExist){
+            return AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE;
+        }
+        User foundUser = userRepository.findByAccountNumber(inquiryRequest.getAccountNumber());
+        return foundUser.getAccountName();
+    }
+    // balance inquiry, name inquiry, credit, debit and transfer
 
 }
