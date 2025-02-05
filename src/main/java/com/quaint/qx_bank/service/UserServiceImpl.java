@@ -4,6 +4,7 @@ import com.quaint.qx_bank.dto.*;
 import com.quaint.qx_bank.entity.User;
 import com.quaint.qx_bank.repository.UserRepository;
 import com.quaint.qx_bank.utils.AccountUtils;
+import org.hibernate.dialect.function.array.AbstractArrayTrimFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -103,6 +104,72 @@ public class UserServiceImpl implements UserService{
         }
         User foundUser = userRepository.findByAccountNumber(inquiryRequest.getAccountNumber());
         return foundUser.getAccountName();
+    }
+
+    @Override
+    public BankResponse creditAccount(CreditDebitRequest creditDebitRequest) {
+        //check if the account exists
+        boolean isAccountExist = userRepository.existsByAccountNumber(creditDebitRequest.getAccountNumber());
+        if (!isAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXISTS_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+        User userToCredit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
+        userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
+        userRepository.save(userToCredit);
+        AccountInfo userAccountInfo = AccountInfo.builder()
+                .accountName(userToCredit.getAccountName())
+                .accountNumber(userToCredit.getAccountNumber())
+                .accountBalance(userToCredit.getAccountBalance())
+                .build();
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_CREDITED_CODE)
+                .responseMessage(AccountUtils.ACCOUNT_CREDITED_MESSAGE)
+                .accountInfo(userAccountInfo)
+                .build();
+
+    }
+
+    @Override
+    public BankResponse debitAccount(CreditDebitRequest creditDebitRequest) {
+        //check if the account exists
+        boolean isAccountExist = userRepository.existsByAccountNumber(creditDebitRequest.getAccountNumber());
+        if (!isAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXISTS_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+        //check if the account has enough balance
+        User userToDebit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
+        if (userToDebit.getAccountBalance().compareTo(creditDebitRequest.getAmount())<0){
+            AccountInfo userAccountInfo = AccountInfo.builder()
+                    .accountName(userToDebit.getAccountName())
+                    .accountNumber(userToDebit.getAccountNumber())
+                    .accountBalance(userToDebit.getAccountBalance())
+                    .build();
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_INSUFFICIENT_FUND_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_INSUFFICIENT_FUND_MESSAGE)
+                    .accountInfo(userAccountInfo)
+                    .build();
+        }
+        userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(creditDebitRequest.getAmount()));
+        userRepository.save(userToDebit);
+        AccountInfo userAccountInfo = AccountInfo.builder()
+                .accountName(userToDebit.getAccountName())
+                .accountNumber(userToDebit.getAccountNumber())
+                .accountBalance(userToDebit.getAccountBalance())
+                .build();
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_DEBITED_CODE)
+                .responseMessage(AccountUtils.ACCOUNT_DEBITED_MESSAGE)
+                .accountInfo(userAccountInfo)
+                .build();
     }
     // balance inquiry, name inquiry, credit, debit and transfer
 

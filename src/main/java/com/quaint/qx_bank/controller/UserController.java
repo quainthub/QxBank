@@ -1,6 +1,7 @@
 package com.quaint.qx_bank.controller;
 
 import com.quaint.qx_bank.dto.BankResponse;
+import com.quaint.qx_bank.dto.CreditDebitRequest;
 import com.quaint.qx_bank.dto.InquiryRequest;
 import com.quaint.qx_bank.dto.UserRequest;
 import com.quaint.qx_bank.service.UserService;
@@ -26,5 +27,15 @@ public class UserController {
     @GetMapping("/nameInquiry")
     public String nameInquiry(@RequestBody InquiryRequest inquiryRequest){
         return userService.nameInquiry(inquiryRequest);
+    }
+
+    @PostMapping("/credit")
+    public BankResponse creditAccount(@RequestBody CreditDebitRequest creditDebitRequest){
+        return userService.creditAccount(creditDebitRequest);
+    }
+
+    @PostMapping("/debit")
+    public BankResponse debitAccount(@RequestBody CreditDebitRequest creditDebitRequest){
+        return userService.debitAccount(creditDebitRequest);
     }
 }
