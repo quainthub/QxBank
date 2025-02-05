@@ -2,6 +2,7 @@ package com.quaint.qx_bank.service;
 
 import com.quaint.qx_bank.dto.AccountInfo;
 import com.quaint.qx_bank.dto.BankResponse;
+import com.quaint.qx_bank.dto.EmailDetails;
 import com.quaint.qx_bank.dto.UserRequest;
 import com.quaint.qx_bank.entity.User;
 import com.quaint.qx_bank.repository.UserRepository;
@@ -16,6 +17,9 @@ public class UserServiceImpl implements UserService{
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    EmailService emailService;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -45,14 +49,29 @@ public class UserServiceImpl implements UserService{
                 .status("ACTIVE")
                 .build();
         User savedUser = userRepository.save(newUser);
+        AccountInfo savedUserAccountInfo = AccountInfo.builder()
+                .accountName(savedUser.getFirstName()+" "+savedUser.getLastName()+" "+savedUser.getOtherName())
+                .accountNumber(savedUser.getAccountNumber())
+                .accountBalance(savedUser.getAccountBalance())
+                .build();
+
+        //Send email alert to user
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(savedUser.getEmail())
+                .subject("ACCOUNT CREATION")
+                .messageBody("Your new account has been created!\n" +
+                        "Your account details:\n" +
+                        "Account Name: "+savedUserAccountInfo.getAccountName()+"\n" +
+                        "Account Number: "+savedUserAccountInfo.getAccountNumber()+"\n" +
+                        "Account Balance: "+savedUserAccountInfo.getAccountBalance())
+                .build();
+        emailService.sendEmailAlert(emailDetails);
+
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_CREATION_CODE)
                 .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
-                .accountInfo(AccountInfo.builder()
-                        .accountName(savedUser.getFirstName()+" "+savedUser.getLastName()+" "+savedUser.getOtherName())
-                        .accountNumber(savedUser.getAccountNumber())
-                        .accountBalance(savedUser.getAccountBalance())
-                        .build())
+                .accountInfo(savedUserAccountInfo)
                 .build();
     }
+
 }
