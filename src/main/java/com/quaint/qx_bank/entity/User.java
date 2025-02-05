@@ -25,6 +25,7 @@ public class User {
     private String gender;
     private String address;
     private String stateOfOrigin;
+    private String accountName;
     private String accountNumber;
     private BigDecimal accountBalance;
     private String email;
@@ -35,4 +36,14 @@ public class User {
     private LocalDateTime createdAt;
     @CreationTimestamp
     private LocalDateTime modifiedAt;
+
+    //Custom UserBuilder for custom setter
+    public static class UserBuilder{
+        public UserBuilder accountName(){
+            this.accountName = this.firstName
+                    +" " +this.lastName
+                    +" " +this.otherName;
+            return this;
+        }
+    }
 }
