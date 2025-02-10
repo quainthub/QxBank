@@ -248,7 +248,7 @@ public class UserServiceImpl implements UserService{
         }
         User userToCredit = userRepository.findByAccountNumber(transferRequest.getDestinationAccountNumber());
         userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(transferRequest.getAmount()));
-        userToCredit.setAccountBalance(userToDebit.getAccountBalance().add(transferRequest.getAmount()));
+        userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(transferRequest.getAmount()));
         userRepository.save(userToDebit);
         userRepository.save(userToCredit);
 
