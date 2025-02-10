@@ -4,7 +4,6 @@ import com.quaint.qx_bank.dto.*;
 import com.quaint.qx_bank.entity.User;
 import com.quaint.qx_bank.repository.UserRepository;
 import com.quaint.qx_bank.utils.AccountUtils;
-import org.hibernate.dialect.function.array.AbstractArrayTrimFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +17,9 @@ public class UserServiceImpl implements UserService{
 
     @Autowired
     EmailService emailService;
+
+    @Autowired
+    TransactionService transactionService;
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
@@ -121,6 +123,14 @@ public class UserServiceImpl implements UserService{
         userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
         userRepository.save(userToCredit);
 
+        //Save transaction
+        TransactionDto creditTransaction = TransactionDto.builder()
+                .accountNumber(userToCredit.getAccountNumber())
+                .transactionType("CREDIT")
+                .amount(creditDebitRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(creditTransaction);
+
         EmailDetails emailDetails = EmailDetails.builder()
                 .recipient(userToCredit.getEmail())
                 .subject("ACCOUNT CREDITED")
@@ -181,6 +191,14 @@ public class UserServiceImpl implements UserService{
                         "Account Number: "+userToDebit.getAccountNumber()+"\n" +
                         "Account Balance: "+userToDebit.getAccountBalance())
                 .build();
+
+        TransactionDto debitTransaction = TransactionDto.builder()
+                .accountNumber(userToDebit.getAccountNumber())
+                .transactionType("DEBIT")
+                .amount(creditDebitRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(debitTransaction);
+
         emailService.sendEmailAlert(emailDetails);
 
         AccountInfo userAccountInfo = AccountInfo.builder()
@@ -233,6 +251,13 @@ public class UserServiceImpl implements UserService{
         userToCredit.setAccountBalance(userToDebit.getAccountBalance().add(transferRequest.getAmount()));
         userRepository.save(userToDebit);
         userRepository.save(userToCredit);
+
+        TransactionDto transferTransaction = TransactionDto.builder()
+                .accountNumber(userToCredit.getAccountNumber())
+                .transactionType("TRANSFER")
+                .amount(transferRequest.getAmount())
+                .build();
+        transactionService.saveTransaction(transferTransaction);
 
         //Send email alert to source user
         EmailDetails emailSourceUser = EmailDetails.builder()
