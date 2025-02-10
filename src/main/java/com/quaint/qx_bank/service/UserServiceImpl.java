@@ -120,6 +120,18 @@ public class UserServiceImpl implements UserService{
         User userToCredit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
         userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
         userRepository.save(userToCredit);
+
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(userToCredit.getEmail())
+                .subject("ACCOUNT CREDITED")
+                .messageBody("Your new account has been credited $"+creditDebitRequest.getAmount()+"\n" +
+                        "Your account details:\n" +
+                        "Account Name: "+userToCredit.getAccountName()+"\n" +
+                        "Account Number: "+userToCredit.getAccountNumber()+"\n" +
+                        "Account Balance: "+userToCredit.getAccountBalance())
+                .build();
+        emailService.sendEmailAlert(emailDetails);
+
         AccountInfo userAccountInfo = AccountInfo.builder()
                 .accountName(userToCredit.getAccountName())
                 .accountNumber(userToCredit.getAccountNumber())
@@ -160,6 +172,17 @@ public class UserServiceImpl implements UserService{
         }
         userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(creditDebitRequest.getAmount()));
         userRepository.save(userToDebit);
+        EmailDetails emailDetails = EmailDetails.builder()
+                .recipient(userToDebit.getEmail())
+                .subject("ACCOUNT DEBITED")
+                .messageBody("Your new account has been debited $"+creditDebitRequest.getAmount()+"\n" +
+                        "Your account details:\n" +
+                        "Account Name: "+userToDebit.getAccountName()+"\n" +
+                        "Account Number: "+userToDebit.getAccountNumber()+"\n" +
+                        "Account Balance: "+userToDebit.getAccountBalance())
+                .build();
+        emailService.sendEmailAlert(emailDetails);
+
         AccountInfo userAccountInfo = AccountInfo.builder()
                 .accountName(userToDebit.getAccountName())
                 .accountNumber(userToDebit.getAccountNumber())
@@ -169,6 +192,80 @@ public class UserServiceImpl implements UserService{
                 .responseCode(AccountUtils.ACCOUNT_DEBITED_CODE)
                 .responseMessage(AccountUtils.ACCOUNT_DEBITED_MESSAGE)
                 .accountInfo(userAccountInfo)
+                .build();
+    }
+
+    @Override
+    public BankResponse transfer(TransferRequest transferRequest) {
+        //get the source account and destination account
+        boolean isSourceAccountExist = userRepository.existsByAccountNumber(transferRequest.getSourceAccountNumber());
+        if (!isSourceAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXISTS_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+        boolean isDestinationAccountExist = userRepository.existsByAccountNumber(transferRequest.getDestinationAccountNumber());
+        if (!isDestinationAccountExist){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_NOT_EXISTS_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
+        //confirm there is enough balance in the source account
+        User userToDebit = userRepository.findByAccountNumber(transferRequest.getSourceAccountNumber());
+        if (userToDebit.getAccountBalance().compareTo(transferRequest.getAmount())<0){
+            AccountInfo userAccountInfo = AccountInfo.builder()
+                    .accountName(userToDebit.getAccountName())
+                    .accountNumber(userToDebit.getAccountNumber())
+                    .accountBalance(userToDebit.getAccountBalance())
+                    .build();
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.ACCOUNT_INSUFFICIENT_FUND_CODE)
+                    .responseMessage(AccountUtils.ACCOUNT_INSUFFICIENT_FUND_MESSAGE)
+                    .accountInfo(userAccountInfo)
+                    .build();
+        }
+        User userToCredit = userRepository.findByAccountNumber(transferRequest.getDestinationAccountNumber());
+        userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(transferRequest.getAmount()));
+        userToCredit.setAccountBalance(userToDebit.getAccountBalance().add(transferRequest.getAmount()));
+        userRepository.save(userToDebit);
+        userRepository.save(userToCredit);
+
+        //Send email alert to source user
+        EmailDetails emailSourceUser = EmailDetails.builder()
+                .recipient(userToDebit.getEmail())
+                .subject("TRANSFER COMPLETED")
+                .messageBody("Transfer has been completed for the following accounts\n" +
+                        "Destination Account Number: "+userToCredit.getAccountNumber()+"\n" +
+                        "Transfer amount: "+transferRequest.getAmount()+"\n" +
+                        "Your account details:\n" +
+                        "Account Name: "+userToDebit.getAccountName()+"\n" +
+                        "Account Number: "+userToDebit.getAccountNumber()+"\n" +
+                        "Account Balance: "+userToDebit.getAccountBalance())
+                .build();
+
+        //Send email alert to source user
+        EmailDetails emailDestinationUser = EmailDetails.builder()
+                .recipient(userToCredit.getEmail())
+                .subject("TRANSFER COMPLETED")
+                .messageBody("Transfer has been completed for the following accounts\n" +
+                        "Source Account Number: "+userToDebit.getAccountNumber()+"\n" +
+                        "Transfer amount: "+transferRequest.getAmount()+"\n" +
+                        "Your account details:\n" +
+                        "Account Name: "+userToCredit.getAccountName()+"\n" +
+                        "Account Number: "+userToCredit.getAccountNumber()+"\n" +
+                        "Account Balance: "+userToCredit.getAccountBalance())
+                .build();
+        emailService.sendEmailAlert(emailSourceUser);
+        emailService.sendEmailAlert(emailDestinationUser);
+
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_FUND_TRANSFERRED_CODE)
+                .responseMessage(AccountUtils.ACCOUNT_FUND_TRANSFERRED_MESSAGE)
+                .accountInfo(null)
                 .build();
     }
     // balance inquiry, name inquiry, credit, debit and transfer

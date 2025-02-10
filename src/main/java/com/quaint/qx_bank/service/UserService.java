@@ -1,9 +1,6 @@
 package com.quaint.qx_bank.service;
 
-import com.quaint.qx_bank.dto.BankResponse;
-import com.quaint.qx_bank.dto.CreditDebitRequest;
-import com.quaint.qx_bank.dto.InquiryRequest;
-import com.quaint.qx_bank.dto.UserRequest;
+import com.quaint.qx_bank.dto.*;
 
 public interface UserService {
     BankResponse createAccount(UserRequest userRequest);
@@ -11,4 +8,5 @@ public interface UserService {
     String nameInquiry(InquiryRequest inquiryRequest);
     BankResponse creditAccount(CreditDebitRequest creditDebitRequest);
     BankResponse debitAccount(CreditDebitRequest creditDebitRequest);
+    BankResponse transfer(TransferRequest transferRequest);
 }

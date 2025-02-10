@@ -1,9 +1,6 @@
 package com.quaint.qx_bank.controller;
 
-import com.quaint.qx_bank.dto.BankResponse;
-import com.quaint.qx_bank.dto.CreditDebitRequest;
-import com.quaint.qx_bank.dto.InquiryRequest;
-import com.quaint.qx_bank.dto.UserRequest;
+import com.quaint.qx_bank.dto.*;
 import com.quaint.qx_bank.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +34,10 @@ public class UserController {
     @PostMapping("/debit")
     public BankResponse debitAccount(@RequestBody CreditDebitRequest creditDebitRequest){
         return userService.debitAccount(creditDebitRequest);
+    }
+
+    @PostMapping("/transfer")
+    public BankResponse debitAccount(@RequestBody TransferRequest transferRequest){
+        return userService.transfer(transferRequest);
     }
 }

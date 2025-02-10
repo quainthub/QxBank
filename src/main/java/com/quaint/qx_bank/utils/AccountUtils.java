@@ -32,6 +32,10 @@ public class AccountUtils {
 
     public static final String ACCOUNT_DEBITED_MESSAGE = "User Account debited";
 
+    public static final String ACCOUNT_FUND_TRANSFERRED_CODE = "008";
+
+    public static final String ACCOUNT_FUND_TRANSFERRED_MESSAGE = "Fund transfer completed";
+
     public static String generateAccountNumber(){
         /**
          * 2023 + random 6 digits
