@@ -11,20 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EmailDetails {
-    @Schema(
-            name = "Recipient Email"
-    )
     private String recipient;
-    @Schema(
-            name = "Message Body"
-    )
     private String messageBody;
-    @Schema(
-            name = "Email Subject"
-    )
     private String subject;
-    @Schema(
-            name = "Attachment"
-    )
     private String attachment;
 }

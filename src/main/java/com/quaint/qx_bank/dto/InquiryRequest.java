@@ -11,8 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InquiryRequest {
-    @Schema(
-            name = "Account Number"
-    )
     private String accountNumber;
 }

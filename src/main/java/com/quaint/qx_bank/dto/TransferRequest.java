@@ -13,16 +13,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransferRequest {
-    @Schema(
-            name = "Source Account Number"
-    )
     private String sourceAccountNumber;
-    @Schema(
-            name = "Destination Account Number"
-    )
     private String destinationAccountNumber;
-    @Schema(
-            name = "Transfer Amount"
-    )
     private BigDecimal amount;
 }

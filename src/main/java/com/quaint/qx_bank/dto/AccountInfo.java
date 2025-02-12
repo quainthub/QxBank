@@ -13,16 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountInfo {
-    @Schema(
-            name = "Account Name"
-    )
     private String accountName;
-    @Schema(
-            name = "Account Number"
-    )
     private String accountNumber;
-    @Schema(
-            name = "Account Balance"
-    )
     private BigDecimal accountBalance;
 }
