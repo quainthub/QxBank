@@ -3,6 +3,7 @@ package com.quaint.qx_bank.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,7 +35,7 @@ public class User {
     private String status;
     @CreationTimestamp
     private LocalDateTime createdAt;
-    @CreationTimestamp
+    @UpdateTimestamp
     private LocalDateTime modifiedAt;
 
     //Custom UserBuilder for custom setter
