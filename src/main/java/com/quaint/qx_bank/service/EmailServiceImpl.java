@@ -1,12 +1,19 @@
 package com.quaint.qx_bank.service;
 
 import com.quaint.qx_bank.dto.EmailDetails;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMailMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
 
 @Service
 public class EmailServiceImpl implements EmailService{
@@ -30,6 +37,27 @@ public class EmailServiceImpl implements EmailService{
             System.out.println("Mail sent successfully!");
 
         }catch (MailException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void sendEmailWithAttachment(EmailDetails emailDetails) {
+        MimeMessage mineMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper;
+        try{
+            mimeMessageHelper = new MimeMessageHelper(mineMessage, true);
+            mimeMessageHelper.setFrom(senderEmail);
+            mimeMessageHelper.setTo(emailDetails.getRecipient());
+            mimeMessageHelper.setText(emailDetails.getMessageBody());
+            mimeMessageHelper.setSubject(emailDetails.getSubject());
+
+            FileSystemResource file = new FileSystemResource(new File(emailDetails.getAttachment()));
+            mimeMessageHelper.addAttachment(file.getFilename(), file);
+            javaMailSender.send(mineMessage);
+            System.out.println("Mail sent successfully!");
+
+        } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
     }
