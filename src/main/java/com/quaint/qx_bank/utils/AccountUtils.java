@@ -18,11 +18,11 @@ public class AccountUtils {
 
     public static final String ACCOUNT_FOUND_CODE = "004";
 
-    public static final String ACCOUNT_FOUND_MESSAGE = "User Account found";
+    public static final String ACCOUNT_FOUND_MESSAGE = "User account found";
 
     public static final String ACCOUNT_CREDITED_CODE = "005";
 
-    public static final String ACCOUNT_CREDITED_MESSAGE = "User Account credited";
+    public static final String ACCOUNT_CREDITED_MESSAGE = "User account credited";
 
     public static final String ACCOUNT_INSUFFICIENT_FUND_CODE = "006";
 
@@ -30,7 +30,7 @@ public class AccountUtils {
 
     public static final String ACCOUNT_DEBITED_CODE = "007";
 
-    public static final String ACCOUNT_DEBITED_MESSAGE = "User Account debited";
+    public static final String ACCOUNT_DEBITED_MESSAGE = "User account debited";
 
     public static final String ACCOUNT_FUND_TRANSFERRED_CODE = "008";
 
