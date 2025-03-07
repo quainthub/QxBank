@@ -1,10 +1,17 @@
 package com.quaint.qx_bank.service;
 
+import com.quaint.qx_bank.config.JwtTokenProvider;
 import com.quaint.qx_bank.dto.*;
+import com.quaint.qx_bank.entity.Role;
 import com.quaint.qx_bank.entity.User;
 import com.quaint.qx_bank.repository.UserRepository;
 import com.quaint.qx_bank.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -21,6 +28,15 @@ public class UserServiceImpl implements UserService{
     @Autowired
     TransactionService transactionService;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
+
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
         /**
@@ -29,7 +45,7 @@ public class UserServiceImpl implements UserService{
          */
         if (userRepository.existsByEmail(userRequest.getEmail())){
             return BankResponse.builder()
-                    .responseCode(AccountUtils.ACCUNT_EXISTS_CODE)
+                    .responseCode(AccountUtils.ACCOUNT_EXISTS_CODE)
                     .responseMessage(AccountUtils.ACCOUNT_EXISTS_MESSAGE)
                     .accountInfo(null)
                     .build();
@@ -45,9 +61,11 @@ public class UserServiceImpl implements UserService{
                 .accountNumber(AccountUtils.generateAccountNumber())
                 .accountBalance(BigDecimal.ZERO)
                 .email(userRequest.getEmail())
+                .password(passwordEncoder.encode(userRequest.getPassword()))
                 .phoneNumber(userRequest.getPhoneNumber())
                 .alternativePhoneNumber(userRequest.getAlternativePhoneNumber())
                 .status("ACTIVE")
+                .role(Role.ROLE_USER)
                 .build();
         User savedUser = userRepository.save(newUser);
         AccountInfo savedUserAccountInfo = AccountInfo.builder()
@@ -75,6 +93,26 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
+    public BankResponse login(LoginDto loginDto){
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+        );
+        EmailDetails loginAlert = EmailDetails.builder()
+                .subject("You are logged in")
+                .recipient(loginDto.getEmail())
+                .messageBody("You logged into your account.")
+                .build();
+
+        emailService.sendEmailAlert(loginAlert);
+
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_LOG_IN_CODE)
+                .responseMessage(AccountUtils.ACCOUNT_LOG_IN_MESSAGE + "\n" +
+                        "Token: "+ jwtTokenProvider.generateToken(authentication))
+                .build();
+    }
+
+
     @Override
     public BankResponse balanceInquiry(InquiryRequest inquiryRequest) {
         boolean isAccountExist = userRepository.existsByAccountNumber(inquiryRequest.getAccountNumber());
@@ -91,6 +129,13 @@ public class UserServiceImpl implements UserService{
                 .accountNumber(foundUser.getAccountNumber())
                 .accountBalance(foundUser.getAccountBalance())
                 .build();
+        if (!jwtTokenProvider.isSameUserWithToken(foundUser.getEmail())){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.UNAUTHORIZED_REQUEST_CODE)
+                    .responseMessage(AccountUtils.UNAUTHORIZED_REQUEST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
         return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_FOUND_CODE)
                 .responseMessage(AccountUtils.ACCOUNT_FOUND_MESSAGE)
@@ -105,6 +150,9 @@ public class UserServiceImpl implements UserService{
             return AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE;
         }
         User foundUser = userRepository.findByAccountNumber(inquiryRequest.getAccountNumber());
+        if (!jwtTokenProvider.isSameUserWithToken(foundUser.getEmail())){
+            return AccountUtils.UNAUTHORIZED_REQUEST_MESSAGE;
+        }
         return foundUser.getAccountName();
     }
 
@@ -120,6 +168,13 @@ public class UserServiceImpl implements UserService{
                     .build();
         }
         User userToCredit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
+        if (!jwtTokenProvider.isSameUserWithToken(userToCredit.getEmail())){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.UNAUTHORIZED_REQUEST_CODE)
+                    .responseMessage(AccountUtils.UNAUTHORIZED_REQUEST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
         userToCredit.setAccountBalance(userToCredit.getAccountBalance().add(creditDebitRequest.getAmount()));
         userRepository.save(userToCredit);
 
@@ -168,6 +223,13 @@ public class UserServiceImpl implements UserService{
         }
         //check if the account has enough balance
         User userToDebit = userRepository.findByAccountNumber(creditDebitRequest.getAccountNumber());
+        if (!jwtTokenProvider.isSameUserWithToken(userToDebit.getEmail())){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.UNAUTHORIZED_REQUEST_CODE)
+                    .responseMessage(AccountUtils.UNAUTHORIZED_REQUEST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
         if (userToDebit.getAccountBalance().compareTo(creditDebitRequest.getAmount())<0){
             AccountInfo userAccountInfo = AccountInfo.builder()
                     .accountName(userToDebit.getAccountName())
@@ -234,6 +296,13 @@ public class UserServiceImpl implements UserService{
         }
         //confirm there is enough balance in the source account
         User userToDebit = userRepository.findByAccountNumber(transferRequest.getSourceAccountNumber());
+        if (!jwtTokenProvider.isSameUserWithToken(userToDebit.getEmail())){
+            return BankResponse.builder()
+                    .responseCode(AccountUtils.UNAUTHORIZED_REQUEST_CODE)
+                    .responseMessage(AccountUtils.UNAUTHORIZED_REQUEST_MESSAGE)
+                    .accountInfo(null)
+                    .build();
+        }
         if (userToDebit.getAccountBalance().compareTo(transferRequest.getAmount())<0){
             AccountInfo userAccountInfo = AccountInfo.builder()
                     .accountName(userToDebit.getAccountName())

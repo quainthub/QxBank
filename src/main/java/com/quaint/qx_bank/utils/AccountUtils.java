@@ -4,7 +4,7 @@ import java.time.Year;
 
 public class AccountUtils {
 
-    public static final String ACCUNT_EXISTS_CODE = "001";
+    public static final String ACCOUNT_EXISTS_CODE = "001";
 
     public static final String ACCOUNT_EXISTS_MESSAGE = "This user already has an account created.";
 
@@ -35,6 +35,15 @@ public class AccountUtils {
     public static final String ACCOUNT_FUND_TRANSFERRED_CODE = "008";
 
     public static final String ACCOUNT_FUND_TRANSFERRED_MESSAGE = "Fund transfer completed";
+
+    public static final String ACCOUNT_LOG_IN_CODE = "009";
+
+    public static final String ACCOUNT_LOG_IN_MESSAGE = "Account logged in";
+
+    public static final String UNAUTHORIZED_REQUEST_CODE = "010";
+
+    public static final String UNAUTHORIZED_REQUEST_MESSAGE = "Unauthorized request intercepted";
+
 
     public static String generateAccountNumber(){
         /**
