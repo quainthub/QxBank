@@ -1,6 +1,6 @@
 package com.quaint.qx_bank.service;
 
-import com.quaint.qx_bank.dto.TransactionDto;
+import com.quaint.qx_bank.dto.TransactionInfo;
 import com.quaint.qx_bank.entity.Transaction;
 import com.quaint.qx_bank.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +13,11 @@ public class TransactionServiceImpl implements TransactionService{
     TransactionRepository transactionRepository;
 
     @Override
-    public void saveTransaction(TransactionDto transactionDto) {
+    public void saveTransaction(TransactionInfo transactionInfo) {
         Transaction transaction = Transaction.builder()
-                .transactionType(transactionDto.getTransactionType())
-                .amount(transactionDto.getAmount())
-                .accountNumber(transactionDto.getAccountNumber())
+                .transactionType(transactionInfo.getTransactionType())
+                .amount(transactionInfo.getAmount())
+                .accountNumber(transactionInfo.getAccountNumber())
                 .status("SUCCESS")
                 .build();
         transactionRepository.save(transaction);

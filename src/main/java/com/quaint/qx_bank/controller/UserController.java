@@ -37,8 +37,8 @@ public class UserController {
             description = "Http Status 201 Created"
     )
     @PostMapping("/login")
-    public BankResponse login(@RequestBody LoginDto loginDto){
-        return userService.login(loginDto);
+    public BankResponse login(@RequestBody LoginRequest loginRequest){
+        return userService.login(loginRequest);
     }
 
     @Operation(

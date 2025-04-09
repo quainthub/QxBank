@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -39,9 +38,9 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
-        /**
-         * Create an account - saving a new user into the db
-         * check if user already has an account
+        /*
+          Create an account - saving a new user into the db
+          check if user already has an account
          */
         if (userRepository.existsByEmail(userRequest.getEmail())){
             return BankResponse.builder()
@@ -93,13 +92,13 @@ public class UserServiceImpl implements UserService{
                 .build();
     }
 
-    public BankResponse login(LoginDto loginDto){
+    public BankResponse login(LoginRequest loginRequest){
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
         );
         EmailDetails loginAlert = EmailDetails.builder()
                 .subject("You are logged in")
-                .recipient(loginDto.getEmail())
+                .recipient(loginRequest.getEmail())
                 .messageBody("You logged into your account.")
                 .build();
 
@@ -179,7 +178,7 @@ public class UserServiceImpl implements UserService{
         userRepository.save(userToCredit);
 
         //Save transaction
-        TransactionDto creditTransaction = TransactionDto.builder()
+        TransactionInfo creditTransaction = TransactionInfo.builder()
                 .accountNumber(userToCredit.getAccountNumber())
                 .transactionType("CREDIT")
                 .amount(creditDebitRequest.getAmount())
@@ -254,7 +253,7 @@ public class UserServiceImpl implements UserService{
                         "Account Balance: "+userToDebit.getAccountBalance())
                 .build();
 
-        TransactionDto debitTransaction = TransactionDto.builder()
+        TransactionInfo debitTransaction = TransactionInfo.builder()
                 .accountNumber(userToDebit.getAccountNumber())
                 .transactionType("DEBIT")
                 .amount(creditDebitRequest.getAmount())
@@ -321,7 +320,7 @@ public class UserServiceImpl implements UserService{
         userRepository.save(userToDebit);
         userRepository.save(userToCredit);
 
-        TransactionDto transferTransaction = TransactionDto.builder()
+        TransactionInfo transferTransaction = TransactionInfo.builder()
                 .accountNumber(userToCredit.getAccountNumber())
                 .transactionType("TRANSFER")
                 .amount(transferRequest.getAmount())

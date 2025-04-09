@@ -1,12 +1,15 @@
 package com.quaint.qx_bank.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class LoginDto {
+public class LoginRequest {
     private String email;
     private String password;
 }

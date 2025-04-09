@@ -4,7 +4,7 @@ import com.quaint.qx_bank.dto.*;
 
 public interface UserService {
     BankResponse createAccount(UserRequest userRequest);
-    BankResponse login(LoginDto loginDto);
+    BankResponse login(LoginRequest loginRequest);
     BankResponse balanceInquiry(InquiryRequest inquiryRequest);
     String nameInquiry(InquiryRequest inquiryRequest);
     BankResponse creditAccount(CreditDebitRequest creditDebitRequest);
